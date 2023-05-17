@@ -42,6 +42,10 @@ class TodoList {
         tasks.add(task);
     }
 
+    public void removeTask(Task task) {
+        tasks.remove(task);
+    }
+
     public List<Task> getTasks() {
         return tasks;
     }
@@ -119,61 +123,99 @@ public class Main {
         System.out.println("Welcome to TodoList!");
 
         while (true) {
-            System.out.println("Enter command (add, list, save, load, sort, notify, exit):");
+            System.out.println("Enter command (add, remove, list, save, load, sort, notify, exit):");
             String command = scanner.nextLine();
-        if (command.equals("add")) {
-            System.out.println("Enter task text:");
-            String text = scanner.nextLine();
-            System.out.println("Enter task priority (1-5):");
-            int priority = Integer.parseInt(scanner.nextLine());
-            System.out.println("Enter task due date (YYYY-MM-DDTHH:MM:SS):");
-            LocalDateTime dueDate = LocalDateTime.parse(scanner.nextLine(), DateTimeFormatter.ISO_DATE_TIME);
-            todoList.addTask(new Task(text, priority, dueDate));
+            if (command.equals("add")) {
+                System.out.println("Enter task text:");
+                String text = scanner.nextLine();
+                System.out.println("Enter task priority (1-5):");
+                int priority;
+                while (true) {
+                    try {
+                        priority = Integer.parseInt(scanner.nextLine());
+                        if (priority >= 1 && priority <= 5) {
+                            break;
+                        } else {
+                            System.out.println("Invalid priority. Enter a number between 1 and 5:");
+                        }
+                    } catch (NumberFormatException e) {
+                        System.out.println("Invalid priority. Enter a number between 1 and 5:");
+                    }
+                }
+                System.out.println("Enter task due date (YYYY-MM-DDTHH:MM:SS):");
+                LocalDateTime dueDate;
+                while (true) {
+                    try {
+                        dueDate = LocalDateTime.parse(scanner.nextLine(), DateTimeFormatter.ISO_DATE_TIME);
+                        break;
+                    } catch (DateTimeParseException e) {
+                        System.out.println("Invalid date format. Enter a valid date and time (YYYY-MM-DDTHH:MM:SS):");
+                    }
+                }
+                todoList.addTask(new Task(text, priority, dueDate));
 
-        } else if (command.equals("list")) {
-            System.out.println("Tasks:");
-            List<Task> tasks = todoList.getTasks();
-            for (Task task : tasks) {
-                System.out.println(task.getText() + " (priority: " + task.getPriority() + ", due date: " + task.getDueDate().format(DateTimeFormatter.ISO_DATE_TIME) + ")");
+            } else if (command.equals("remove")) {
+                System.out.println("Enter task text to remove:");
+                String text = scanner.nextLine();
+                List<Task> tasks = todoList.getTasks();
+                Task taskToRemove = null;
+                for (Task task : tasks) {
+                    if (task.getText().equals(text)) {
+                        taskToRemove = task;
+                        break;
+                    }
+                }
+                if (taskToRemove != null) {
+                    todoList.removeTask(taskToRemove);
+                    System.out.println("Task removed.");
+                } else {
+                    System.out.println("Task not found.");
+                }
+
+            } else if (command.equals("list")) {
+                System.out.println("Tasks:");
+                List<Task> tasks = todoList.getTasks();
+                for (Task task : tasks) {
+                    System.out.println(task.getText() + " (priority: " + task.getPriority() + ", due date: " + task.getDueDate().format(DateTimeFormatter.ISO_DATE_TIME) + ")");
+                }
+
+            } else if (command.equals("save")) {
+                try {
+                    System.out.println("Enter file name:");
+                    String fileName = scanner.nextLine();
+                    todoList.saveToFile(fileName);
+                    System.out.println("Tasks saved to file.");
+
+                } catch (IOException e) {
+                    System.out.println("Error saving tasks to file: " + e.getMessage());
+                }
+
+            } else if (command.equals("load")) {
+                try {
+                    System.out.println("Enter file name:");
+                    String fileName = scanner.nextLine();
+                    todoList.loadFromFile(fileName);
+                    System.out.println("Tasks loaded from file.");
+
+                } catch (IOException e) {
+                    System.out.println("Error loading tasks from file: " + e.getMessage());
+                }
+
+            } else if (command.equals("sort")) {
+                todoList.sortTasksByName();
+                System.out.println("Tasks sorted by name.");
+
+            } else if (command.equals("notify")) {
+                todoList.notifyTasksDueToday();
+
+            } else if (command.equals("exit")) {
+                break;
+
+            } else {
+                System.out.println("Invalid command.");
             }
-
-        } else if (command.equals("save")) {
-            try {
-                System.out.println("Enter file name:");
-                String fileName = scanner.nextLine();
-                todoList.saveToFile(fileName);
-                System.out.println("Tasks saved to file.");
-
-            } catch (IOException e) {
-                System.out.println("Error saving tasks to file: " + e.getMessage());
-            }
-
-        } else if (command.equals("load")) {
-            try {
-                System.out.println("Enter file name:");
-                String fileName = scanner.nextLine();
-                todoList.loadFromFile(fileName);
-                System.out.println("Tasks loaded from file.");
-
-            } catch (IOException e) {
-                System.out.println("Error loading tasks from file: " + e.getMessage());
-            }
-
-        } else if (command.equals("sort")) {
-            todoList.sortTasksByName();
-            System.out.println("Tasks sorted by name.");
-
-        } else if (command.equals("notify")) {
-            todoList.notifyTasksDueToday();
-
-        } else if (command.equals("exit")) {
-            break;
-
-        } else {
-            System.out.println("Invalid command.");
         }
-    }
 
-    System.out.println("Goodbye!");
-}
+        System.out.println("Goodbye!");
+    }
 }
